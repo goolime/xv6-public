@@ -4,6 +4,7 @@
 #include "user.h"
 #include "fcntl.h"
 
+
 // Parsed command representation
 #define EXEC  1
 #define REDIR 2
@@ -75,7 +76,62 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       exit();
-    exec(ecmd->argv[0], ecmd->argv);
+    int f_dir=open(ecmd->argv[0],O_RDONLY);
+    if (f_dir!=-1){
+        close(f_dir);
+        exec(ecmd->argv[0], ecmd->argv);
+    }
+    else{
+        close(f_dir);
+        f_dir = open("/PATH",O_RDONLY);
+        char charbuff[128];
+        int nread=read(f_dir,charbuff,128);
+        charbuff[nread]=0;
+        /*
+         * printf(2,"read :%d\n",nread);
+         * printf(2,"content :%s\n",charbuff);
+         */
+        while(nread>0) {
+              for (int i = 0; i < nread;) {
+                  int j;
+                  for (j=i;j<nread;j++){
+                      if (charbuff[j]==':') break;
+                  }
+                  char *oldargv=ecmd->argv[0];
+                  char newargv[strlen(oldargv)+(j-i)+1];
+                  for (int k=0;k<j-i;k++){
+                      newargv[k]=charbuff[i+k];
+                  }
+                  for(int k=0; k<strlen(oldargv);k++){
+                      newargv[j-i+k]=oldargv[k];
+                  }
+                  newargv[strlen(oldargv)+(j-i)]=0;
+                  //printf(2,"%s\n",newargv);
+                  ecmd->argv[0]=&newargv[0];
+                  int tmp_dir=open(newargv,O_RDONLY);
+                  /*
+                   * printf(2,"%s\n",ecmd->argv[0]);
+                   * printf(2,"%d\n",f_dir);
+                   */
+                  if(tmp_dir!=-1) {
+                      close(tmp_dir);
+                      close(f_dir);
+                      exec(ecmd->argv[0], ecmd->argv);
+                  }
+                  close(tmp_dir);
+                  ecmd->argv[0]=oldargv;
+                  i=j+1;
+              }
+              nread=read(f_dir,charbuff,128);
+              charbuff[nread]=0;
+              /*
+               * printf(2,"read :%d\n",nread);
+               * printf(2,"content :%s\n",charbuff);
+               */
+        }
+        close(f_dir);
+    }
+
     printf(2, "exec %s failed\n", ecmd->argv[0]);
     break;
 
@@ -155,6 +211,17 @@ main(void)
     }
   }
 
+    /*
+     * creation of the PATH file
+     */
+
+    int f_dir=open("/PATH",O_RDONLY);
+    if (f_dir==-1){
+        close(f_dir);
+        f_dir=open("/PATH",O_WRONLY | O_CREATE);
+        write(f_dir,"/:/bin/:",8);
+    }
+    close(f_dir);
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
