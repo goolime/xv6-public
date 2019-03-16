@@ -14,16 +14,22 @@ sys_fork(void)
 }
 
 int
-sys_exit(void)
+sys_exit(void) //changed for task 2
 {
-  exit();
+  int status;
+  if (argint(0,&status) < 0)
+    return -1;
+  exit(status);
   return 0;  // not reached
 }
 
 int
-sys_wait(void)
+sys_wait(void) //changed for task 2
 {
-  return wait();
+  char* status;
+  if (argptr(0, &status, 4) < 0)
+    return -1;
+  return wait((int *) status);
 }
 
 int
@@ -88,4 +94,15 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+//task 2.3
+int
+sys_detach(void)
+{
+    int pid;
+
+    if (argint(0, &pid) < 0)
+        return -1;
+    return detach(pid);
 }

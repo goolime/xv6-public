@@ -4,7 +4,6 @@
 #include "user.h"
 #include "fcntl.h"
 
-
 // Parsed command representation
 #define EXEC  1
 #define REDIR 2
@@ -66,7 +65,7 @@ runcmd(struct cmd *cmd)
   struct redircmd *rcmd;
 
   if(cmd == 0)
-    exit();
+    exit(0);
 
   switch(cmd->type){
   default:
@@ -75,8 +74,8 @@ runcmd(struct cmd *cmd)
   case EXEC:
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
-      exit();
-    int f_dir=open(ecmd->argv[0],O_RDONLY);
+      exit(0);
+   int f_dir=open(ecmd->argv[0],O_RDONLY);
     if (f_dir!=-1){
         close(f_dir);
         exec(ecmd->argv[0], ecmd->argv);
@@ -140,7 +139,7 @@ runcmd(struct cmd *cmd)
     close(rcmd->fd);
     if(open(rcmd->file, rcmd->mode) < 0){
       printf(2, "open %s failed\n", rcmd->file);
-      exit();
+      exit(0);
     }
     runcmd(rcmd->cmd);
     break;
@@ -149,7 +148,7 @@ runcmd(struct cmd *cmd)
     lcmd = (struct listcmd*)cmd;
     if(fork1() == 0)
       runcmd(lcmd->left);
-    wait();
+    wait(0);
     runcmd(lcmd->right);
     break;
 
@@ -173,8 +172,8 @@ runcmd(struct cmd *cmd)
     }
     close(p[0]);
     close(p[1]);
-    wait();
-    wait();
+    wait(0);
+    wait(0);
     break;
 
   case BACK:
@@ -183,7 +182,7 @@ runcmd(struct cmd *cmd)
       runcmd(bcmd->cmd);
     break;
   }
-  exit();
+  exit(0);
 }
 
 int
@@ -211,17 +210,16 @@ main(void)
     }
   }
 
-    /*
-     * creation of the PATH file
-     */
-
-    int f_dir=open("/PATH",O_RDONLY);
-    if (f_dir==-1){
-        close(f_dir);
-        f_dir=open("/PATH",O_WRONLY | O_CREATE);
-        write(f_dir,"/:/bin/:",8);
-    }
+  // creation of the PATH file
+   
+  int f_dir=open("/PATH",O_RDONLY);
+  if (f_dir==-1){
+      close(f_dir);
+      f_dir=open("/PATH",O_WRONLY | O_CREATE);
+      write(f_dir,"/:/bin/:",8);
+  }
     close(f_dir);
+
   // Read and run input commands.
   while(getcmd(buf, sizeof(buf)) >= 0){
     if(buf[0] == 'c' && buf[1] == 'd' && buf[2] == ' '){
@@ -233,16 +231,16 @@ main(void)
     }
     if(fork1() == 0)
       runcmd(parsecmd(buf));
-    wait();
+    wait(0);
   }
-  exit();
+  exit(0);
 }
 
 void
 panic(char *s)
 {
   printf(2, "%s\n", s);
-  exit();
+  exit(0);
 }
 
 int
