@@ -544,7 +544,6 @@ int
 detach(int Cpid)
 {
     struct proc *p;
-    int pid;
     struct proc *curproc = myproc();
 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
