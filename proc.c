@@ -290,6 +290,7 @@ wait(int *status)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
+        *status = p->status;
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
@@ -298,7 +299,7 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-        p->status = *status; //update the status(task2)
+        p->status = 0; //update the status(task2)
         release(&ptable.lock);
         return pid;
       }
@@ -540,7 +541,23 @@ procdump(void)
 //task 2.3
 // releases the parent process from the need to wait for the child to finish its execution
 int
-detach(int pid)
+detach(int Cpid)
 {
+    struct proc *p;
+    int pid;
+    struct proc *curproc = myproc();
 
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        if(p->parent != curproc)
+            continue;
+        if(p->pid == Cpid){
+            // Found the child pid.
+            p->parent = initproc;
+            if(p->state == ZOMBIE)
+                wakeup1(initproc);
+            return 0;
+        }
+    }
+
+    return -1;
 }
