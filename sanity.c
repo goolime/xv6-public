@@ -2,11 +2,6 @@
 // Created by gal on 17/03/19.
 //
 #include "types.h"
-#include "param.h"
-#include "memlayout.h"
-#include "mmu.h"
-#include "x86.h"
-#include "proc.h"
 #include "stat.h"
 #include "user.h"
 
@@ -28,4 +23,5 @@ int main(void) {
                   "third_status = %d\n",
                first_status, second_status, third_status);
     }
+    exit(0);
 }
