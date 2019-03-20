@@ -52,6 +52,7 @@ struct proc {
   struct inode *cwd;             // Current directory  
   char name[16];                 // Process name (debugging)
   int status;                    // Save exit status (task 2)
+  long long accumulator;         // Saves the priority of the process for Priority Scheduling (task 3.2)
 };
 
 // Process memory is laid out contiguously, low addresses first:

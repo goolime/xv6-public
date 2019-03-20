@@ -159,6 +159,7 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  rrq.enqueue(p);
 
   release(&ptable.lock);
 }
@@ -224,7 +225,9 @@ fork(void)
 
   acquire(&ptable.lock);
 
+  np->accumulator=5;
   np->state = RUNNABLE;
+  rrq.enqueue(np);
 
   release(&ptable.lock);
 
@@ -347,9 +350,17 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+
+    //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if (!rrq.isEmpty()){
+    p = rrq.dequeue();
+      /*
+      if(p->state != RUNNABLE) {
+          rrq.enqueue(p);
+          release(&ptable.lock);
+          continue;
+      }
+      */
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -364,6 +375,8 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
+    //rrq.enqueue(p);
+    //}
     }
     release(&ptable.lock);
 
@@ -402,6 +415,7 @@ yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
   myproc()->state = RUNNABLE;
+  rrq.enqueue(myproc());
   sched();
   release(&ptable.lock);
 }
@@ -475,8 +489,10 @@ wakeup1(void *chan)
   struct proc *p;
 
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
-    if(p->state == SLEEPING && p->chan == chan)
-      p->state = RUNNABLE;
+    if(p->state == SLEEPING && p->chan == chan) {
+        p->state = RUNNABLE;
+        rrq.enqueue(p);
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -501,8 +517,10 @@ kill(int pid)
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
-      if(p->state == SLEEPING)
-        p->state = RUNNABLE;
+      if(p->state == SLEEPING) {
+          p->state = RUNNABLE;
+          rrq.enqueue(p);
+      }
       release(&ptable.lock);
       return 0;
     }
