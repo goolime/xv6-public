@@ -117,3 +117,13 @@ sys_priority(void)
   return (0); // not reached
 }
 
+//task 3.4
+int
+sys_policy(void)
+{
+  int p;
+  argint(0, &p);
+  policy(p);
+  return (0); // not reached
+}
+

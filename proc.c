@@ -345,7 +345,7 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-        p->status = 0;                      // update the status(task2)
+        p->status = 0;                      // update the status(task 2)
         p->accumulator=0;                   // zeroing the accumulator value (task 3.2)
         p->priority=0;                      // zeroing the priority value (task 3.2)
         release(&ptable.lock);
@@ -387,26 +387,26 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (schedulingMethod==ROUND_ROBIN) {
+    if (schedulingMethod == ROUND_ROBIN) {
         if (rrq.isEmpty()) {
             release(&ptable.lock);
             continue;
         }
         p = rrq.dequeue();
     }
-    else if (schedulingMethod==PRIORITY_SCHEDULING) {
+    else if (schedulingMethod == PRIORITY_SCHEDULING) {
         if (pq.isEmpty()) {
             release(&ptable.lock);
             continue;
         }
-        p=pq.extractMin();
+        p = pq.extractMin();
     }
     else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
         if (pq.isEmpty()) {
             release(&ptable.lock);
             continue;
         }
-        p=pq.extractMin();
+        p = pq.extractMin();
     }
     else panic("unknown scheduling method2");
     /*
@@ -644,7 +644,7 @@ procdump(void)
   }
 }
 
-//task 2.3
+// task 2.3
 // releases the parent process from the need to wait for the child to finish its execution
 int
 detach(int Cpid)

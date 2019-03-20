@@ -23,8 +23,9 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
-int detach(int); //task2
+int detach(int); //task 2
 void priority(int); //task 3.2
+void policy(int); //task 3.4
 
 // ulib.c
 int stat(const char*, struct stat*);

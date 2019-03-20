@@ -120,8 +120,9 @@ void            userinit(void);
 int             wait(int *);
 void            wakeup(void*);
 void            yield(void);
-int             detach(int); //task2
+int             detach(int); //task 2
 void            priority(int); //task 3.2
+void            policy(int); //task 3.4
 
 // swtch.S
 void            swtch(struct context**, struct context*);
