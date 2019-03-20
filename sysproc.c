@@ -106,3 +106,16 @@ sys_detach(void)
         return -1;
     return detach(pid);
 }
+
+//task 3.2
+int
+sys_priority(void)
+{
+  int p;
+  argint(0, &p);
+  if (p < 1 || p > 10)
+    return -1;
+  priority(p);
+  return (0); // not reached
+}
+

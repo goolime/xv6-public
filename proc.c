@@ -1,3 +1,4 @@
+
 #include "schedulinginterface.h"
 #include "types.h"
 #include "defs.h"
@@ -352,8 +353,8 @@ scheduler(void)
     acquire(&ptable.lock);
 
     //for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if (!rrq.isEmpty()){
-    p = rrq.dequeue();
+    if (!rrq.isEmpty()) {
+      p = rrq.dequeue();
       /*
       if(p->state != RUNNABLE) {
           rrq.enqueue(p);
@@ -375,8 +376,8 @@ scheduler(void)
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->proc = 0;
-    //rrq.enqueue(p);
-    //}
+      //rrq.enqueue(p);
+      //}
     }
     release(&ptable.lock);
 
@@ -587,4 +588,13 @@ detach(int Cpid)
     }
 
     return -1;
+}
+
+//task 3.2
+// change priority
+void
+priority (int p)
+{
+    struct proc *curproc = myproc();
+    curproc->accumulator = p;
 }

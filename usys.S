@@ -30,3 +30,4 @@ SYSCALL(sbrk)
 SYSCALL(sleep)
 SYSCALL(uptime)
 SYSCALL(detach) //task 2.3
+SYSCALL(priority) //task 3.2

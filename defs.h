@@ -121,6 +121,7 @@ int             wait(int *);
 void            wakeup(void*);
 void            yield(void);
 int             detach(int); //task2
+void            priority(int); //task 3.2
 
 // swtch.S
 void            swtch(struct context**, struct context*);
