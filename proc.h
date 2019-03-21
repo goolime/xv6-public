@@ -54,6 +54,7 @@ struct proc {
   int status;                    // Save exit status (task 2)
   int priority;                  // the process priority (task 3.2)
   long long accumulator;         // Saves the priority of the process for Priority Scheduling (task 3.2)
+  long long last_running_time;   // Saves the last time this process finished running on the cpu
 };
 
 // Process memory is laid out contiguously, low addresses first:

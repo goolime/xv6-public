@@ -20,6 +20,9 @@ extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
 int schedulingMethod = PRIORITY_SCHEDULING;
+long long zero_time = 0;
+long long current_time = 0;
+int loop_time = 0;
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
@@ -169,6 +172,7 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  p->last_running_time = current_time;
   if (schedulingMethod == ROUND_ROBIN) rrq.enqueue(p);
   else if (schedulingMethod == PRIORITY_SCHEDULING){
       p->priority = 5;
@@ -177,7 +181,13 @@ userinit(void)
       p->accumulator=min;
       pq.put(p);
   }
-  else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING);
+  else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
+      p->priority = 5;
+      long long min;
+      if (!pq.getMinAccumulator(&min)) min = 0;
+      p->accumulator=min;
+      pq.put(p);
+  }
   else panic("unknown scheduling method6");
 
 
@@ -257,7 +267,11 @@ fork(void)
       pq.put(np);
   }
   else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
-
+      np->priority = 5;
+      long long min;
+      if (!pq.getMinAccumulator(&min)) min = 0;
+      np->accumulator=min;
+      pq.put(np);
   }
   else panic("unknown scheduling method1");
 
@@ -375,7 +389,7 @@ wait(int *status)
 void
 scheduler(void)
 {
-  struct proc *p;
+  struct proc *p= null;
   struct cpu *c = mycpu();
   c->proc = 0;
 
@@ -406,7 +420,23 @@ scheduler(void)
             release(&ptable.lock);
             continue;
         }
-        p = pq.extractMin();
+
+        if (loop_time == 100) {
+            loop_time = 0;
+            long long min = current_time;
+            struct proc *rp=null;
+            for(rp = ptable.proc; rp < &ptable.proc[NPROC]; rp++){
+                if(rp->last_running_time < min){
+                    p = rp;
+                    min = p->last_running_time;
+                }
+            }
+            if (p == null) {
+                release(&ptable.lock);
+                continue;
+            }
+        }
+        else p = pq.extractMin();
     }
     else panic("unknown scheduling method2");
     /*
@@ -469,8 +499,10 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
+  current_time = current_time+1;
   struct proc *p = myproc();
   p->state = RUNNABLE;
+  p->last_running_time = current_time;
   if (schedulingMethod == ROUND_ROBIN)
       rrq.enqueue(p);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
@@ -478,7 +510,9 @@ yield(void)
       pq.put(p);
   }
   else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
-
+      loop_time = loop_time + 1;
+      p->accumulator = p->accumulator + p->priority;
+      pq.put(p);
   }
   else panic("unknown scheduling method3");
   sched();
@@ -557,8 +591,18 @@ wakeup1(void *chan)
     if(p->state == SLEEPING && p->chan == chan) {
         p->state = RUNNABLE;
         if (schedulingMethod == ROUND_ROBIN) rrq.enqueue(p);
-        else if (schedulingMethod == PRIORITY_SCHEDULING) pq.put(p);
-        else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING) ;
+        else if (schedulingMethod == PRIORITY_SCHEDULING) {
+            long long min;
+            if (!pq.getMinAccumulator(&min)) min = 0;
+            p->accumulator=min;
+            pq.put(p);
+        }
+        else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING) {
+            long long min;
+            if (!pq.getMinAccumulator(&min)) min = 0;
+            p->accumulator=min;
+            pq.put(p);
+        }
         else panic("unknown scheduling method4");
     }
 }
@@ -596,7 +640,12 @@ kill(int pid)
               pq.put(p);
 
           }
-          else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING) ;
+          else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
+              long long min;
+              if (!pq.getMinAccumulator(&min)) min = 0;
+              p->accumulator=min;
+              pq.put(p);
+          }
           else panic("unknown scheduling method5");
       }
       release(&ptable.lock);
@@ -673,9 +722,12 @@ void
 priority (int p)
 {
     struct proc *curproc = myproc();
-    if (p < 1)
+    if (schedulingMethod== EXTENDED_PRIORITY_SCHEDULING && p == 0){
+        p = 0;                    // do nothing...
+    }
+    else if (p < 1)
         p = 1;
-    if (p > 10)
+    else if (p > 10)
         p = 10;
     curproc->priority = p;
 }
@@ -688,17 +740,39 @@ policy (int policy)
     struct proc *p;
     
     if (policy < 1 || policy > 3) panic("unknown scheduling policy");
+
     acquire(&ptable.lock);
-    
+
+    cprintf("Changing Scheduling policy to ");
+
     if (policy == ROUND_ROBIN){
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
             p->accumulator=0;
         }
+        if(schedulingMethod != ROUND_ROBIN) {
+            if (!pq.switchToRoundRobinPolicy()) panic("round robin transfer failed");
+        }
+        cprintf("Round Robin\n");
+
     }
     else if (policy == PRIORITY_SCHEDULING){
+
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
             if (p->priority==0) p->priority=1;
         }
+        if(schedulingMethod == ROUND_ROBIN) {
+            if (!rrq.switchToPriorityQueuePolicy()) panic("priority scheduling transfer failed");
+        }
+        cprintf("Priority Scheduling\n");
+    }
+    else if (policy == EXTENDED_PRIORITY_SCHEDULING){
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+            if (p->priority==0) p->priority=1;
+        }
+        if(schedulingMethod == ROUND_ROBIN) {
+            if (!rrq.switchToPriorityQueuePolicy()) panic("priority scheduling transfer failed");
+        }
+        cprintf("Extended Priority Scheduling\n");
     }
 
     schedulingMethod=policy;
