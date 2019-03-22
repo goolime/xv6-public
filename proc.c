@@ -392,6 +392,7 @@ scheduler(void)
   struct proc *p= null;
   struct cpu *c = mycpu();
   c->proc = 0;
+  boolean found = false;
 
   for(;;){
     // Enable interrupts on this processor.
@@ -421,22 +422,34 @@ scheduler(void)
             continue;
         }
 
-        if (loop_time == 100) {
-            loop_time = 0;
+        if (current_time % 100 == 0) {
+            cprintf("current time = %d\n", current_time);
+            //loop_time = 0;
             long long min = current_time;
             struct proc *rp=null;
             for(rp = ptable.proc; rp < &ptable.proc[NPROC]; rp++){
-                if(rp->last_running_time < min){
+                if(rp->status == RUNNABLE && rp->last_running_time < min){
+                    cprintf("FOUND ONE\n");
+                    found = true;
                     p = rp;
                     min = p->last_running_time;
                 }
             }
-            if (p == null) {
+
+            if (!found)
+            {
+                cprintf("NOT FOUND ONE\n");
+                current_time++;
                 release(&ptable.lock);
                 continue;
             }
+            else {
+                found = false;
+                pq.extractProc(p); //remove the process with the minimum last running time from the queue
+            }
         }
         else p = pq.extractMin();
+        //cprintf("current time = %d\n", current_time);
     }
     else panic("unknown scheduling method2");
     /*
@@ -499,10 +512,11 @@ void
 yield(void)
 {
   acquire(&ptable.lock);  //DOC: yieldlock
-  current_time = current_time+1;
+  //current_time = current_time+1;
   struct proc *p = myproc();
   p->state = RUNNABLE;
-  p->last_running_time = current_time;
+ // p->last_running_time = current_time;
+ current_time = p->last_running_time;
   if (schedulingMethod == ROUND_ROBIN)
       rrq.enqueue(p);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
@@ -510,7 +524,7 @@ yield(void)
       pq.put(p);
   }
   else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
-      loop_time = loop_time + 1;
+      //loop_time = loop_time + 1;
       p->accumulator = p->accumulator + p->priority;
       pq.put(p);
   }
