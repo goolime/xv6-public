@@ -55,6 +55,12 @@ struct proc {
   int priority;                  // the process priority (task 3.2)
   long long accumulator;         // Saves the priority of the process for Priority Scheduling (task 3.2)
   long long last_running_time;   // Saves the last time this process finished running on the cpu
+                                 // task 3.5-
+  long long ctime;               // process creation time.
+  long long ttime;               // process termination time.
+  long long stime;               // the total time the process spent in the SLEEPING state.
+  long long retime;              // the total time the process spent in the READY state.
+  long long rutime;              // the total time the process spent in the RUNNING state.
 };
 
 // Process memory is laid out contiguously, low addresses first:

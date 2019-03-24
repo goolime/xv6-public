@@ -13,16 +13,12 @@
 #define PRIORITY_SCHEDULING 2
 #define EXTENDED_PRIORITY_SCHEDULING 3
 
-
-
 extern PriorityQueue pq;
 extern RoundRobinQueue rrq;
 extern RunningProcessesHolder rpholder;
 
-int schedulingMethod = PRIORITY_SCHEDULING;
-long long zero_time = 0;
+int schedulingMethod = ROUND_ROBIN;
 long long current_time = 0;
-int loop_time = 0;
 
 long long getAccumulator(struct proc *p) {
 	//Implement this function, remove the panic line.
@@ -258,6 +254,7 @@ fork(void)
 
   //if (schedulingMethod == PRIORITY_SCHEDULING) cprintf("%d\n", PRIORITY_SCHEDULING);
   np->state = RUNNABLE;
+  np->ctime = current_time;
   if (schedulingMethod == ROUND_ROBIN) rrq.enqueue(np);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
       np->priority = 5;
@@ -323,6 +320,9 @@ exit(int status) //added status for task 2 (was void)
         wakeup1(initproc);
     }
   }
+
+  // TODO: not sure that will give proper termination time
+  curproc->ttime=current_time;
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
@@ -424,13 +424,12 @@ scheduler(void)
 
         if (current_time % 100 == 0) {
             //cprintf("current time = %d\n", current_time);
-            //loop_time = 0;
             long long min = current_time;
             struct proc *rp=null;
             for(rp = ptable.proc; rp < &ptable.proc[NPROC]; rp++){
                 //cprintf("\nprocess last time run: %d state : %d\n",rp->last_running_time,rp->state);
                 if(rp->state == RUNNABLE && rp->last_running_time < min){
-                    cprintf("FOUND ONE\n");
+                    //cprintf("FOUND ONE\n");
                     found = true;
                     p = rp;
                     min = p->last_running_time;
@@ -439,7 +438,7 @@ scheduler(void)
 
             if (!found)
             {
-                cprintf("NOT FOUND ONE\n");
+                //cprintf("NOT FOUND ONE\n");
                 current_time++;
                 release(&ptable.lock);
                 continue;
@@ -460,7 +459,6 @@ scheduler(void)
      * continue;
      * }
      */
-
 
     // Switch to chosen process.  It is the process's job
     // to release ptable.lock and then reacquire it
@@ -525,7 +523,6 @@ yield(void)
       pq.put(p);
   }
   else if (schedulingMethod == EXTENDED_PRIORITY_SCHEDULING){
-      //loop_time = loop_time + 1;
       p->accumulator = p->accumulator + p->priority;
       pq.put(p);
   }
@@ -793,4 +790,10 @@ policy (int policy)
     schedulingMethod=policy;
 
     release(&ptable.lock);
+}
+
+// task 3.5
+int
+wait_stat(int* status, struct perf * performance){
+
 }
