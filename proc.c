@@ -423,12 +423,13 @@ scheduler(void)
         }
 
         if (current_time % 100 == 0) {
-            cprintf("current time = %d\n", current_time);
+            //cprintf("current time = %d\n", current_time);
             //loop_time = 0;
             long long min = current_time;
             struct proc *rp=null;
             for(rp = ptable.proc; rp < &ptable.proc[NPROC]; rp++){
-                if(rp->status == RUNNABLE && rp->last_running_time < min){
+                //cprintf("\nprocess last time run: %d state : %d\n",rp->last_running_time,rp->state);
+                if(rp->state == RUNNABLE && rp->last_running_time < min){
                     cprintf("FOUND ONE\n");
                     found = true;
                     p = rp;
@@ -516,7 +517,7 @@ yield(void)
   struct proc *p = myproc();
   p->state = RUNNABLE;
  // p->last_running_time = current_time;
- current_time = p->last_running_time;
+  current_time = p->last_running_time;
   if (schedulingMethod == ROUND_ROBIN)
       rrq.enqueue(p);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
