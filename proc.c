@@ -254,7 +254,7 @@ fork(void)
 
   //if (schedulingMethod == PRIORITY_SCHEDULING) cprintf("%d\n", PRIORITY_SCHEDULING);
   np->state = RUNNABLE;
-  np->ctime = current_time;
+  np->ctime = ticks;
   if (schedulingMethod == ROUND_ROBIN) rrq.enqueue(np);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
       np->priority = 5;
@@ -321,8 +321,7 @@ exit(int status) //added status for task 2 (was void)
     }
   }
 
-  // TODO: not sure that will give proper termination time
-  curproc->ttime=current_time;
+  curproc->ttime=ticks;
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
@@ -792,8 +791,75 @@ policy (int policy)
     release(&ptable.lock);
 }
 
+void preformence (void){
+    struct proc *p;
+    acquire(&ptable.lock);
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+        switch (p->state){
+            case SLEEPING:
+                p->stime++;
+                break;
+            case RUNNABLE:
+                p->retime++;
+                break;
+            case RUNNING:
+                p->rutime++;
+                break;
+            default:
+                break;
+        }
+    }
+    release(&ptable.lock);
+};
+
 // task 3.5
 int
-wait_stat(int* status, struct perf * performance){
+wait_stat(int* status, struct perf * perfo){
 
+    struct proc *p;
+    int havekids, pid;
+    struct proc *curproc = myproc();
+
+    acquire(&ptable.lock);
+    for(;;){
+        // Scan through table looking for exited children.
+        havekids = 0;
+        for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+            if(p->parent != curproc)
+                continue;
+            havekids = 1;
+
+            if(p->state == ZOMBIE){
+                perfo->rutime=p->rutime;
+                perfo->retime=p->retime;
+                perfo->ttime=p->ttime;
+                perfo->ctime=p->ctime;
+                // Found one.
+                pid = p->pid;
+                *status = p->status;
+                kfree(p->kstack);
+                p->kstack = 0;
+                freevm(p->pgdir);
+                p->pid = 0;
+                p->parent = 0;
+                p->name[0] = 0;
+                p->killed = 0;
+                p->state = UNUSED;
+                p->status = 0;                      // update the status(task 2)
+                p->accumulator=0;                   // zeroing the accumulator value (task 3.2)
+                p->priority=0;                      // zeroing the priority value (task 3.2)
+                release(&ptable.lock);
+                return pid;
+            }
+        }
+
+        // No point waiting if we don't have any children.
+        if(!havekids || curproc->killed){
+            release(&ptable.lock);
+            return -1;
+        }
+
+        // Wait for children to exit.  (See wakeup1 call in proc_exit.)
+        sleep(curproc, &ptable.lock);  //DOC: wait-sleep
+    }
 }

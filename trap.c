@@ -51,6 +51,9 @@ trap(struct trapframe *tf)
     if(cpuid() == 0){
       acquire(&tickslock);
       ticks++;
+
+
+
       wakeup(&ticks);
       release(&tickslock);
     }
@@ -94,6 +97,8 @@ trap(struct trapframe *tf)
     myproc()->killed = 1;
   }
 
+
+
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running
   // until it gets to the regular system call return.)
@@ -104,7 +109,8 @@ trap(struct trapframe *tf)
   // If interrupts were on while locks held, would need to check nlock.
   if(myproc() && myproc()->state == RUNNING &&
      tf->trapno == T_IRQ0+IRQ_TIMER) {
-    myproc()->last_running_time = ticks;  //update the last time the process ran
+      proc *p=myproc();
+      p->last_running_time = ticks;  //update the last time the process ran
     yield();
   }
   // Check if the process has been killed since we yielded
