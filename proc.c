@@ -249,12 +249,14 @@ fork(void)
 
   pid = np->pid;
 
+  np->ctime = ticks;
+
   acquire(&ptable.lock);
 
 
   //if (schedulingMethod == PRIORITY_SCHEDULING) cprintf("%d\n", PRIORITY_SCHEDULING);
   np->state = RUNNABLE;
-  np->ctime = ticks;
+
   if (schedulingMethod == ROUND_ROBIN) rrq.enqueue(np);
   else if (schedulingMethod == PRIORITY_SCHEDULING) {
       np->priority = 5;
@@ -623,6 +625,7 @@ void
 wakeup(void *chan)
 {
   acquire(&ptable.lock);
+  preformence();
   wakeup1(chan);
   release(&ptable.lock);
 }
@@ -639,6 +642,7 @@ kill(int pid)
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
+      p->ttime = ticks;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING) {
           p->state = RUNNABLE;
@@ -793,7 +797,6 @@ policy (int policy)
 
 void preformence (void){
     struct proc *p;
-    acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
         switch (p->state){
             case SLEEPING:
@@ -809,8 +812,7 @@ void preformence (void){
                 break;
         }
     }
-    release(&ptable.lock);
-};
+}
 
 // task 3.5
 int

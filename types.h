@@ -6,12 +6,6 @@ typedef unsigned char    uchar;
 typedef uint             pde_t;
 typedef int            boolean;
 
-struct perf {
-    int ctime;
-    int ttime;
-    int retime;
-    int rutime;
-};
 
 #define null 0
 

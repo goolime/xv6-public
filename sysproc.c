@@ -127,3 +127,16 @@ sys_policy(void)
   return (0); // not reached
 }
 
+//task 3.5
+int
+sys_wait_stat(void)
+{
+  char *status;
+  char *perfo;
+  if (argptr(0, &status, 4) < 0)
+    return -1;
+  if (argptr(4, &perfo, 4) < 0)
+      //cprintf("worng argPTR");
+    return -1;
+  return wait_stat((int *) status,(struct perf*)perfo);
+}

@@ -32,3 +32,4 @@ SYSCALL(uptime)
 SYSCALL(detach) //task 2.3
 SYSCALL(priority) //task 3.2
 SYSCALL(policy) //task 3.4
+SYSCALL(wait_stat) //task 3.5
