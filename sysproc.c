@@ -135,7 +135,7 @@ sys_wait_stat(void)
   char *perfo;
   if (argptr(0, &status, 4) < 0)
     return -1;
-  if (argptr(4, &perfo, 4) < 0)
+  if (argptr(1, &perfo, 4) < 0)
       //cprintf("worng argPTR");
     return -1;
   return wait_stat((int *) status,(struct perf*)perfo);

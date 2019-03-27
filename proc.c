@@ -467,7 +467,6 @@ scheduler(void)
     c->proc = p;
     switchuvm(p);
     p->state = RUNNING;
-
     swtch(&(c->scheduler), p->context);
     switchkvm();
 
@@ -758,7 +757,7 @@ policy (int policy)
 
     acquire(&ptable.lock);
 
-    cprintf("Changing Scheduling policy to ");
+    //cprintf("Changing Scheduling policy to ");
 
     if (policy == ROUND_ROBIN){
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -767,7 +766,7 @@ policy (int policy)
         if(schedulingMethod != ROUND_ROBIN) {
             if (!pq.switchToRoundRobinPolicy()) panic("round robin transfer failed");
         }
-        cprintf("Round Robin\n");
+        //cprintf("Round Robin\n");
 
     }
     else if (policy == PRIORITY_SCHEDULING){
@@ -778,7 +777,7 @@ policy (int policy)
         if(schedulingMethod == ROUND_ROBIN) {
             if (!rrq.switchToPriorityQueuePolicy()) panic("priority scheduling transfer failed");
         }
-        cprintf("Priority Scheduling\n");
+        //cprintf("Priority Scheduling\n");
     }
     else if (policy == EXTENDED_PRIORITY_SCHEDULING){
         for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -787,7 +786,7 @@ policy (int policy)
         if(schedulingMethod == ROUND_ROBIN) {
             if (!rrq.switchToPriorityQueuePolicy()) panic("priority scheduling transfer failed");
         }
-        cprintf("Extended Priority Scheduling\n");
+        //cprintf("Extended Priority Scheduling\n");
     }
 
     schedulingMethod=policy;

@@ -82,7 +82,7 @@ runcmd(struct cmd *cmd)
     }
     else{
         close(f_dir);
-        f_dir = open("/PATH",O_RDONLY);
+        f_dir = open("/path",O_RDONLY);
         char charbuff[128];
         int nread=read(f_dir,charbuff,128);
         charbuff[nread]=0;
@@ -212,10 +212,10 @@ main(void)
 
   // creation of the PATH file
    
-  int f_dir=open("/PATH",O_RDONLY);
+  int f_dir=open("/path",O_RDONLY);
   if (f_dir==-1){
       close(f_dir);
-      f_dir=open("/PATH",O_WRONLY | O_CREATE);
+      f_dir=open("/path",O_WRONLY | O_CREATE);
       write(f_dir,"/:/bin/:",8);
   }
     close(f_dir);
